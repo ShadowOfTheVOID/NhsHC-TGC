@@ -1,8 +1,10 @@
 import {createRequire} from 'module'
 const require = createRequire(import.meta.url)
+import {CONFIG} from '../../config'
 
 /**
  * @typedef {import('models/root-model').RootModel} RootModel
+ * @typedef {import('firebase-admin').database.Database} Database
  */
 
 class FirebaseLogs {
@@ -27,6 +29,7 @@ class FirebaseLogs {
 				credential: admin.credential.cert(serviceAccount),
 				databaseURL: 'https://hc-tcg-leaderboard-default-rtdb.firebaseio.com',
 			})
+			/** @type {Database} */
 			this.db = admin.database()
 		} catch (err) {
 			console.log('No valid firebase key. Statistics will not be stored.')
@@ -80,6 +83,7 @@ class FirebaseLogs {
 				startDeck: gameLog.startDeck,
 				endTimestamp: new Date().getTime(),
 				turns: game.state.turn,
+				world: CONFIG.world,
 			}
 			let pid0 = playerStates[0].id
 			root.players[pid0].socket.emit('gameoverstat', {

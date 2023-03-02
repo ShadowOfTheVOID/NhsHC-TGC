@@ -61,10 +61,12 @@ class GoodTimesWithScarRareHermitCard extends HermitCard {
 		// next turn attack on scar
 		game.hooks.attack.tap(this.id, (target) => {
 			const {opponentPlayer} = game.ds
-			if (target.row.hermitCard.cardId !== this.id) return target
-
 			const instance = opponentPlayer.custom[this.id]
 			if (!instance) return target
+
+			// Check that we are attacking card that used the Deathloop ability
+			if (target.row.hermitCard.cardInstance !== instance) return target
+
 			const coinFlip = opponentPlayer.custom[instance]
 
 			if (!coinFlip || coinFlip[0] === 'tails') return target
@@ -77,10 +79,10 @@ class GoodTimesWithScarRareHermitCard extends HermitCard {
 		game.hooks.attackResult.tap(this.id, (target, turnAction, attackState) => {
 			const {currentPlayer, opponentPlayer} = game.ds
 			const {attackerHermitCard} = attackState
-			if (target.row.hermitCard.cardId !== this.id) return target
 
 			const instance = opponentPlayer.custom[this.id]
 			if (!instance) return target
+			if (target.row.hermitCard.cardInstance !== instance) return target
 			const coinFlip = opponentPlayer.custom[instance]
 			if (!coinFlip) return target
 			if (!target.died && !target.revived) return target
@@ -93,11 +95,11 @@ class GoodTimesWithScarRareHermitCard extends HermitCard {
 		// ailment death
 		game.hooks.hermitDeath.tap(this.id, (recovery, deathInfo) => {
 			const {playerState, row} = deathInfo
-			if (row.hermitCard.cardId !== this.id) return
+			if (row.hermitCard.cardId !== this.id) return recovery
 			const instance = playerState.custom[this.id]
-			if (!instance) return
+			if (!instance) return recovery
 			const coinFlip = playerState.custom[instance]
-			if (!coinFlip) return
+			if (!coinFlip) return recovery
 
 			playerState.coinFlips[this.id] = coinFlip
 

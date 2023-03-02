@@ -44,7 +44,7 @@ function* attackSaga(game, turnAction, actionState) {
 		? currentPlayer.board.singleUseCard
 		: null
 
-	if (!attackerActiveRow) return 'INVALID'
+	if (!attackerActiveRow || !attackerActiveRow.hermitCard) return 'INVALID'
 
 	const attackerHermitCard = attackerActiveRow.hermitCard
 	const attackerHermitInfo = CARDS[attackerHermitCard.cardId]
@@ -101,6 +101,9 @@ function* attackSaga(game, turnAction, actionState) {
 		const hermitAttack = target.applyHermitDamage
 			? attackerHermitInfo[type]?.damage || 0
 			: 0
+		const extraHermitAttack = target.applyHermitDamage
+			? target.extraHermitDamage || 0
+			: 0
 
 		/* --- Damage to target --- */
 		const health = target.row.health
@@ -111,12 +114,11 @@ function* attackSaga(game, turnAction, actionState) {
 			: targetEffectInfo?.protection?.target || 0
 		const weaknessDamage =
 			strengths.includes(targetHermitInfo.hermitType) &&
-			hermitAttack + target.extraHermitDamage > 0
+			hermitAttack + extraHermitAttack > 0
 				? WEAKNESS_DAMAGE
 				: 0
 		const totalDamage =
-			target.multiplier *
-				(hermitAttack + target.extraHermitDamage + weaknessDamage) +
+			target.multiplier * (hermitAttack + extraHermitAttack + weaknessDamage) +
 			target.extraEffectDamage
 
 		const finalDamage = Math.max(totalDamage - protection, 0)
@@ -163,7 +165,9 @@ function* attackSaga(game, turnAction, actionState) {
 
 		/* --- Counter attack (TNT/Thorns/Wolf/Zed) --- */
 
-		const attackerEffectInfo = CARDS[playerActiveRow.effectCard?.cardId]
+		const attackerEffectInfo = playerActiveRow.effectCard?.cardId
+			? CARDS[playerActiveRow.effectCard?.cardId]
+			: null
 		const attackerProtection = attackerEffectInfo?.protection?.target || 0
 		const attackerBacklash = targetEffectInfo?.protection?.backlash || 0
 
